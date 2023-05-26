@@ -19,7 +19,6 @@ describe("BasicDutchAuction", function () {
       numBlocksAuctionOpen,
       offerPriceDecrement
     );
-
     await basicDutchAuction.deployed();
   });
 
@@ -43,6 +42,16 @@ describe("BasicDutchAuction", function () {
     await expect(basicDutchAuction.connect(bidder1).claimRefund()).to.be.revertedWith("No refund available");
   });
 
+  it("should revert when bid amount is lower than current price", async function () {
+    const currentPrice = await basicDutchAuction.getCurrentPrice()-1;
+    await expect(basicDutchAuction.connect(bidder1).bid({value: currentPrice})).to.be.revertedWith("Bid amount is lower than current price");
+  });
+
+  it("should revert when bid amount is lower than 0", async function () {
+    const bidAmount = ethers.utils.parseEther("0");
+    await expect(basicDutchAuction.connect(bidder1).bid({value: bidAmount})).to.be.revertedWith("Bid amount must be greater than 0");
+  });
+
   it("should refund upcoming bids and not accept more bids after the winner's bid", async function () {
     const bidAmount1 = ethers.utils.parseEther("3");
     const bidAmount2 = ethers.utils.parseEther("2");
@@ -53,17 +62,8 @@ describe("BasicDutchAuction", function () {
     const amountbeforeClaim = await basicDutchAuction.balanceOf(bidder1.address);
     await basicDutchAuction.connect(bidder1).claimRefund();
     const amountafterClaim = await basicDutchAuction.balanceOf(bidder1.address);
-    // console.log(amountbeforeClaim);
-    // console.log(amountafterClaim);
-    // console.log(bidAmount1);
     const difference = amountbeforeClaim.sub(amountafterClaim); // Calculate the difference
     expect(difference).to.equal(bidAmount1);
-    // expect(await basicDutchAuction.connect(bidder1).claimRefund()).to.equal(bidAmount1);
-    // const refundAmount = await basicDutchAuction.connect(bidder1).claimRefund();
-    // const expectedRefundAmount = BigInt(bidAmount1.toString());
-    
-    // expect(refundAmount.toString()).to.equal(expectedRefundAmount.toString());
-
   });
 
   it("should return 0 when block number exceeds auction end time", async () => {
@@ -73,13 +73,10 @@ describe("BasicDutchAuction", function () {
     while ((await ethers.provider.getBlockNumber()) <= auctionEndTime) {
       await ethers.provider.send("evm_mine", []);
     }
-
     const currentPrice = await basicDutchAuction.getCurrentPrice();
-
     expect(currentPrice).to.equal(0);
+    const bidAmount = ethers.utils.parseEther("1");
+    await expect(basicDutchAuction.connect(bidder1).bid({value: bidAmount})).to.be.revertedWith("Auction has ended");
   });
-
-
-
 
 });

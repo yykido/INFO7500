@@ -47,7 +47,6 @@ contract BasicDutchAuction {
             seller.transfer(firstBid);
             return true;
         }
-        console.log(block.number);
         bids[msg.sender] += msg.value;
         return false;
     }
