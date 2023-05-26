@@ -43,9 +43,11 @@ contract BasicDutchAuction {
             firstBidder = payable(msg.sender);
             firstBid = msg.value;
             gotValidBid = true;
+            bids[seller] += firstBid;
             seller.transfer(firstBid);
             return true;
         }
+        console.log(block.number);
         bids[msg.sender] += msg.value;
         return false;
     }
@@ -59,26 +61,16 @@ contract BasicDutchAuction {
         }
     }
 
-    // function endAuction() public {
-    //     require(!auctionEnded, "Auction has already ended");
-    //     require(block.number >= auctionEndTime, "Auction is still open");
-
-    //     auctionEnded = true;
-    //     if (highestBid > 0) {
-    //         // Transfer the highest bid amount to the seller
-    //         seller.transfer(highestBid);
-    //     }
-    // }
-
-    function claimRefund() public returns (uint256 refundAmount){
+    function claimRefund() external {
         // require(auctionEnded, "Auction has not ended");
         require(bids[msg.sender] > 0, "No refund available");
 
-        refundAmount = bids[msg.sender];
+        uint256 refundAmount = bids[msg.sender];
         bids[msg.sender] = 0;
         payable(msg.sender).transfer(refundAmount);
     }
-    // console.log("refundAmount: %s", refundAmount);
-        // console.log("msg.sender.balance: %s", msg.sender.balance);
-        // console.log("After refundAmount: %s", refundAmount+msg.sender.balance);
+
+    function balanceOf(address account) external view returns (uint256) {
+        return bids[account];
+    }
 }
