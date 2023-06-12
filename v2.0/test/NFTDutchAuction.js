@@ -26,6 +26,7 @@ describe("NFTDutchAuction", function () {
       );
       await nftDutchAuction.deployed();
     });
+
     it("Should set the total supply", async function () {
       
       expect(await nftDutchAuction.totalSupply()).to.equal(0);
@@ -41,13 +42,7 @@ describe("NFTDutchAuction", function () {
   
       expect(event).to.not.be.undefined;
       expect(event.args.length > 0 && event.args[2]).to.equal(0);
-      
-      // await nftDutchAuction.mint(bidder1.address);
-      // expect(await nftDutchAuction.totalSupply()).to.equal(1);
     });
-
-
-  
 
   it("should initialize contract variables correctly", async function () {
     expect(await nftDutchAuction.seller()).to.equal(seller.address);
@@ -108,4 +103,17 @@ describe("NFTDutchAuction", function () {
     await expect(nftDutchAuction.connect(bidder1).bid({value: bidAmount})).to.be.revertedWith("Auction has ended");
   });
 
+  it("should mint the NFT and send it to the winner", async () => {
+    // Mint the NFT and check if it was successful
+    const mintTx = await nftDutchAuction.mint(bidder1.address);
+    expect(mintTx).to.emit(nftDutchAuction, "Transfer").withArgs(seller.address, bidder1.address, token_id);
+    
+        // Check if bidder1 is the owner of the NFT
+    //   const bidder1HasNFT = await nftDutchAuction.ownerOf(token_id);
+    //   expect(bidder1HasNFT).to.equal(bidder1.address, "Bidder1 does not have the NFT");
+
+    // Confirm that the NFT balance of bidder1 is 1
+    const bidder1NFTBalance = await nftDutchAuction.balanceOf(bidder1.address);
+    expect(bidder1NFTBalance).to.equal(1, "Bidder1 NFT balance is incorrect");
+  });
 });
