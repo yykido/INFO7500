@@ -1,5 +1,5 @@
 {
-  "name": "v3.0",
+  "name": "v2.0",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,7 +9,10 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
-    "hardhat": "^2.15.0"
+    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
+    "hardhat": "^2.14.1"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.9.1"
   }
 }
