@@ -98,7 +98,10 @@ contract NFTDutchAuction_ERC20Bids is ERC721PresetMinterPauserAutoId {
 
         uint256 refundAmount = bids[msg.sender];
         bids[msg.sender] = 0;
-        IERC20(erc20TokenAddress).transfer(msg.sender, refundAmount);
+        console.log('refundAmount: ');
+        console.log(refundAmount);
+        IERC20(erc20TokenAddress).transferFrom(seller, msg.sender, refundAmount);
+        // IERC20(erc20TokenAddress).transfer(msg.sender, refundAmount);
     }
 
 

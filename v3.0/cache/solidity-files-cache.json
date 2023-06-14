@@ -929,8 +929,8 @@
       ]
     },
     "/Users/yy/Documents/GitHub/INFO7500/v3.0/contracts/NFTDutchAuction_ERC20Bids.sol": {
-      "lastModificationDate": 1686670064247,
-      "contentHash": "0fae6492a2ac66438ee8244f1cb7f7ca",
+      "lastModificationDate": 1686735112474,
+      "contentHash": "5e48b5a7237a55abca4d071d888efc3f",
       "sourceName": "contracts/NFTDutchAuction_ERC20Bids.sol",
       "solcConfig": {
         "version": "0.8.18",
