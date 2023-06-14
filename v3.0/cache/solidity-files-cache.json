@@ -929,8 +929,8 @@
       ]
     },
     "/Users/yy/Documents/GitHub/INFO7500/v3.0/contracts/NFTDutchAuction_ERC20Bids.sol": {
-      "lastModificationDate": 1686669198082,
-      "contentHash": "f5093416d3112a23a2ee9749e5c537a5",
+      "lastModificationDate": 1686670064247,
+      "contentHash": "0fae6492a2ac66438ee8244f1cb7f7ca",
       "sourceName": "contracts/NFTDutchAuction_ERC20Bids.sol",
       "solcConfig": {
         "version": "0.8.18",
@@ -957,6 +957,7 @@
       },
       "imports": [
         "hardhat/console.sol",
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
         "@openzeppelin/contracts/token/ERC721/presets/ERC721PresetMinterPauserAutoId.sol"
       ],
       "versionPragmas": [

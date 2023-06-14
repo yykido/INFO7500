@@ -18,16 +18,16 @@ describe("NFTDutchAuction_ERC20Bids", function () {
     beforeEach(async function () {
       [seller, bidder1, bidder2,tokenAddress] = await ethers.getSigners();
       // // Deploy the ERC20 token contract
-      // const ERC20Token = await ethers.getContractFactory("YYToken");
-      // erc20Token = await ERC20Token.deploy();
-      // await erc20Token.deployed();
+      const ERC20Token = await ethers.getContractFactory("YYToken");
+      erc20Token = await ERC20Token.deploy(1000000);
+      await erc20Token.deployed();
 
-      // // Get the address of the deployed ERC20 token contract
-      // const erc20TokenAddress = erc20Token.address;
+      // Get the address of the deployed ERC20 token contract
+      const erc20TokenAddress = erc20Token.address;
       
       const NFTDutchAuction = await ethers.getContractFactory("NFTDutchAuction_ERC20Bids");
       nftDutchAuction = await NFTDutchAuction.deploy(
-        tokenAddress.address, //  need to be converted to ERC20Token address
+        erc20TokenAddress,
         tokenAddress.address,
         token_id,
         reservePrice,
@@ -35,9 +35,12 @@ describe("NFTDutchAuction_ERC20Bids", function () {
         offerPriceDecrement
       );
       await nftDutchAuction.deployed();
+      
     });
 
     it("Should set the total supply", async function () {
+      const balance = await erc20Token.balanceOf(seller.address)
+      console.log(balance);
       
       expect(await nftDutchAuction.totalSupply()).to.equal(0);
     });
@@ -64,12 +67,15 @@ describe("NFTDutchAuction_ERC20Bids", function () {
   });
 
   it("should allow the first bidder to place bid and send it to seller immediately", async function () {
-    const bidAmount1 = ethers.utils.parseEther("1.5");
-    await nftDutchAuction.connect(bidder1).bid({ value: bidAmount1 });
-    expect(await nftDutchAuction.firstBidder()).to.equal(bidder1.address);
-    expect(await nftDutchAuction.firstBid()).to.equal(bidAmount1);
-    // check if the seller receives the bid amount or not
-    expect(await nftDutchAuction.getBalanceOf(seller.address)).to.equal(bidAmount1);
+    const bidAmount1 = ethers.utils.parseUnits("1"); // Use the appropriate number of decimals for your ERC20 token
+    await erc20Token.connect(bidder1).approve(nftDutchAuction.address, bidAmount1);
+    await nftDutchAuction.connect(bidder1).bid(bidAmount1);
+    expect(await erc20Token.balanceOf(seller.address)).to.equal(bidAmount1);
+    // await nftDutchAuction.connect(bidder1).bid({ value: bidAmount1 });
+    // expect(await nftDutchAuction.firstBidder()).to.equal(bidder1.address);
+    // expect(await nftDutchAuction.firstBid()).to.equal(bidAmount1);
+    // // check if the seller receives the bid amount or not
+    // expect(await nftDutchAuction.getBalanceOf(seller.address)).to.equal(bidAmount1);
   });
 
   it("should revert when no refund is available", async function () {
