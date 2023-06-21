@@ -48,23 +48,6 @@ contract NFTDutchAuction_ERC20Bids is ERC721PresetMinterPauserAutoId {
         erc20TokenAddress = _erc20TokenAddress;
     }
 
-    // function bid() public payable returns(bool){
-    //     uint256 currentPrice = getCurrentPrice();
-    //     require(currentPrice > 0, "Auction has ended");
-    //     require(msg.value > 0, "Bid amount must be greater than 0");
-    //     require(msg.value >= currentPrice, "Bid amount is lower than current price");
-
-    //     if(!gotValidBid) {
-    //         firstBidder = payable(msg.sender);
-    //         firstBid = msg.value;
-    //         gotValidBid = true;
-    //         bids[seller] += firstBid;
-    //         seller.transfer(firstBid);
-    //         return true;
-    //     }
-    //     bids[msg.sender] += msg.value;
-    //     return false;
-    // }
     function bid(uint256 amount) public returns (bool) {
         uint256 currentPrice = getCurrentPrice();
         require(currentPrice > 0, "Auction has ended");
@@ -103,17 +86,6 @@ contract NFTDutchAuction_ERC20Bids is ERC721PresetMinterPauserAutoId {
         IERC20(erc20TokenAddress).transferFrom(seller, msg.sender, refundAmount);
         // IERC20(erc20TokenAddress).transfer(msg.sender, refundAmount);
     }
-
-
-    // function claimRefund() external {
-    //     // require(auctionEnded, "Auction has not ended");
-    //     require(bids[msg.sender] > 0, "No refund available");
-
-    //     uint256 refundAmount = bids[msg.sender];
-    //     bids[msg.sender] = 0;
-    //     payable(msg.sender).transfer(refundAmount);
-    // }
-
     function getBalanceOf(address account) public view returns (uint256) {
         return bids[account];
     }

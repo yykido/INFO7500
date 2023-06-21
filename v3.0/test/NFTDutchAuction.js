@@ -69,16 +69,13 @@ describe("NFTDutchAuction_ERC20Bids", function () {
   });
 
   it("should allow the first bidder to place bid and send it to seller immediately", async function () {
-    // const bidAmount1 = ethers.utils.parseUnits("1"); // Use the appropriate number of decimals for your ERC20 token
     const bidAmount1 = 10000;
     await erc20Token.connect(bidder1).approve(nftDutchAuction.address, bidAmount1);
     await nftDutchAuction.connect(bidder1).bid(bidAmount1);
     expect(await erc20Token.balanceOf(seller.address)).to.equal(bidAmount1);
-    // await nftDutchAuction.connect(bidder1).bid({ value: bidAmount1 });
-    // expect(await nftDutchAuction.firstBidder()).to.equal(bidder1.address);
-    // expect(await nftDutchAuction.firstBid()).to.equal(bidAmount1);
+
     // // check if the seller receives the bid amount or not
-    // expect(await nftDutchAuction.getBalanceOf(seller.address)).to.equal(bidAmount1);
+    expect(await nftDutchAuction.getBalanceOf(seller.address)).to.equal(bidAmount1);
   });
 
   it("should revert when no refund is available", async function () {
@@ -107,27 +104,15 @@ describe("NFTDutchAuction_ERC20Bids", function () {
     const bidAmount2 = 2000;
     await erc20Token.connect(bidder2).approve(nftDutchAuction.address, bidAmount2);
     // await erc20Token.connect(bidder2).transfer(seller.address, bidAmount2);
-
-    // console.log("balance of seller in 7th test case");
-    // const balanceOfseller = await erc20Token.balanceOf(seller.address);
-    // console.log(balanceOfseller);
-
     expect(await nftDutchAuction.gotValidBid()).to.be.false;
     await nftDutchAuction.connect(bidder2).bid(bidAmount2);
     expect(await nftDutchAuction.gotValidBid()).to.be.true;
     await nftDutchAuction.connect(bidder1).bid(bidAmount1);
     const balance1 = await erc20Token.balanceOf(bidder1.address);
-    // console.log('balance1');
-    // console.log(balance1);
-    // const amountbeforeClaim = await nftDutchAuction.getBalanceOf(bidder1.address);
     const balanceOfseller = await erc20Token.balanceOf(seller.address);
-    // console.log('balance of seller');
-    // console.log(balanceOfseller);
     await erc20Token.connect(seller).approve(nftDutchAuction.address, bidAmount1);
     await nftDutchAuction.connect(bidder1).claimRefund();
     const balance2 = await erc20Token.balanceOf(bidder1.address);
-    // console.log(balance2);
-    // const amountafterClaim = await nftDutchAuction.getBalanceOf(bidder1.address);
     const difference = balance2.sub(balance1); // Calculate the difference
     expect(difference).to.equal(bidAmount1);
   });
