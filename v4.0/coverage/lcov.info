@@ -1,5 +1,5 @@
 TN:
-SF:/Users/yy/Documents/GitHub/INFO7500/v3.0/contracts/NFTDutchAuction_ERC20Bids.sol
+SF:/Users/yy/Documents/GitHub/INFO7500/v4.0/contracts/NFTDutchAuction_ERC20Bids.sol
 FN:35,constructor
 FN:51,bid
 FN:70,getCurrentPrice
@@ -68,7 +68,7 @@ BRF:12
 BRH:12
 end_of_record
 TN:
-SF:/Users/yy/Documents/GitHub/INFO7500/v3.0/contracts/YYToken.sol
+SF:/Users/yy/Documents/GitHub/INFO7500/v4.0/contracts/YYToken.sol
 FN:8,constructor
 FNF:1
 FNH:1

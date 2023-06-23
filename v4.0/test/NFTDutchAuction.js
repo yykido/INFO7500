@@ -24,7 +24,7 @@ describe("NFTDutchAuction_ERC20Bids", function () {
     // Get the address of the deployed ERC20 token contract
     const erc20TokenAddress = erc20Token.address;
     
-    const NFTDutchAuction = await ethers.getContractFactory("NFTDutchAuction_ERC20Bids");
+    const NFTDutchAuction = await ethers.getContractAt("NFTDutchAuction_ERC20Bids");
     nftDutchAuction = await NFTDutchAuction.deploy(
       erc20TokenAddress,
       tokenAddress.address,
