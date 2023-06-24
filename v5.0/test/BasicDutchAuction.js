@@ -1,5 +1,57 @@
 const { expect } = require("chai");
 const { ethers, upgrades } = require("hardhat");
+const { BigNumber } = require("ethers");
+
+async function getPermitSignature(signer, token, spender, value, deadline) {
+  const [nonce, name, version, chainId] = await Promise.all([
+    token.nonces(signer.address),
+    token.name(),
+    "1",
+    signer.getChainId(),
+  ]);
+
+  return ethers.utils.splitSignature(
+    await signer._signTypedData(
+      {
+        name,
+        version,
+        chainId,
+        verifyingContract: token.address,
+      },
+      {
+        Permit: [
+          {
+            name: "owner",
+            type: "address",
+          },
+          {
+            name: "spender",
+            type: "address",
+          },
+          {
+            name: "value",
+            type: "uint256",
+          },
+          {
+            name: "nonce",
+            type: "uint256",
+          },
+          {
+            name: "deadline",
+            type: "uint256",
+          },
+        ],
+      },
+      {
+        owner: signer.address,
+        spender,
+        value,
+        nonce,
+        deadline,
+      }
+    )
+  );
+}
 
 describe("NFTDutchAuction_ERC20Bids2", function () {
   let nftDutchAuction;
@@ -14,6 +66,8 @@ describe("NFTDutchAuction_ERC20Bids2", function () {
   const reservePrice = 1000;
   const numBlocksAuctionOpen = 10;
   const offerPriceDecrement = 100;
+  const deadline = ethers.constants.MaxUint256;
+  
 
   beforeEach(async function () {
     [seller, bidder1, bidder2] = await ethers.getSigners();
@@ -50,14 +104,21 @@ describe("NFTDutchAuction_ERC20Bids2", function () {
     expect(await nftDutchAuction.offerPriceDecrement()).to.equal(offerPriceDecrement);
   });
 
-  // it("Should set the total supply", async function () {
-  //   const balance = await erc20Token.balanceOf(bidder1.address);
-  //   const balance2 = await erc20Token.balanceOf(seller.address)
-  //   console.log(balance);
-  //   console.log(balance2);
-    
-  //   expect(await nftDutchAuction.totalSupply()).to.equal(0);
-  // });
+  it("Check if the ERC20 tokens are deposited into the seller's wallet upon the successful auction completion", async function () {
+    const { v, r, s } = await getPermitSignature(
+      seller,
+      erc20Token,
+      nftDutchAuction.address,
+      3000,
+      deadline
+    );
+    let sellerBalancePre = await erc20Token.balanceOf(bidder1.address);
+    await erc20Token.connect(bidder1).approve(nftDutchAuction.address, 3000);
+    await nftDutchAuction.connect(bidder1).bid(3000, true, v, r, s, deadline);
+    let sellerBalancePost = await erc20Token.balanceOf(bidder1.address)
+    expect(sellerBalancePost).to.equal(sellerBalancePre.sub(3000));
+  });
+
   it("Should set the total supply after mint", async function () {
 
     const tx = await nftAuctionContract.mint(bidder1.address);
@@ -82,8 +143,15 @@ describe("NFTDutchAuction_ERC20Bids2", function () {
 
   it("should allow the first bidder to place bid and send it to seller immediately", async function () {
     const bidAmount1 = 10000;
+    const { v, r, s } = await getPermitSignature(
+      seller,
+      erc20Token,
+      nftDutchAuction.address,
+      bidAmount1,
+      deadline
+    );
     await erc20Token.connect(bidder1).approve(nftDutchAuction.address, bidAmount1);
-    await nftDutchAuction.connect(bidder1).bid(bidAmount1);
+    await nftDutchAuction.connect(bidder1).bid(bidAmount1, true, v, r, s, deadline);
     expect(await erc20Token.balanceOf(seller.address)).to.equal(bidAmount1);
 
     // // check if the seller receives the bid amount or not
@@ -98,33 +166,55 @@ describe("NFTDutchAuction_ERC20Bids2", function () {
     const currentPrice = await nftDutchAuction.getCurrentPrice()-1;
 
     const bidAmount1 = 1;
+    const { v, r, s } = await getPermitSignature(
+      seller,
+      erc20Token,
+      nftDutchAuction.address,
+      bidAmount1,
+      deadline
+    );
     await erc20Token.connect(bidder1).approve(nftDutchAuction.address, bidAmount1);
-    await expect(nftDutchAuction.connect(bidder1).bid(bidAmount1)).to.be.revertedWith("Bid amount is lower than current price");
+    await expect(nftDutchAuction.connect(bidder1).bid(bidAmount1, true, v, r, s, deadline)).to.be.revertedWith("Bid amount is lower than current price");
   });
 
   it("should revert when bid amount is lower than 0", async function () {
     // const bidAmount = ethers.utils.parseEther("0");
     const bidAmount1 = 0;
+    const { v, r, s } = await getPermitSignature(
+      seller,
+      erc20Token,
+      nftDutchAuction.address,
+      bidAmount1,
+      deadline
+    );
     await erc20Token.connect(bidder1).approve(nftDutchAuction.address, bidAmount1);
-    await expect(nftDutchAuction.connect(bidder1).bid(bidAmount1)).to.be.revertedWith("Bid amount must be greater than 0");
+    await expect(nftDutchAuction.connect(bidder1).bid(bidAmount1, true, v, r, s, deadline)).to.be.revertedWith("Bid amount must be greater than 0");
   });
 
   it("should refund upcoming bids and not accept more bids after the winner's bid", async function () {
     const bidAmount1 = 3000;
-    await erc20Token.connect(bidder1).approve(nftDutchAuction.address, bidAmount1);
     // await erc20Token.connect(bidder1).transfer(seller.address, bidAmount1);
-    const bidAmount2 = 2000;
-    await erc20Token.connect(bidder2).approve(nftDutchAuction.address, bidAmount2);
+
+    const { v, r, s } = await getPermitSignature(
+      seller,
+      erc20Token,
+      nftDutchAuction.address,
+      bidAmount1,
+      deadline
+    );
+    await erc20Token.connect(bidder2).approve(nftDutchAuction.address, bidAmount1);
     // await erc20Token.connect(bidder2).transfer(seller.address, bidAmount2);
     expect(await nftDutchAuction.gotValidBid()).to.be.false;
-    await nftDutchAuction.connect(bidder2).bid(bidAmount2);
+    await nftDutchAuction.connect(bidder2).bid(bidAmount1, true, v, r, s, deadline);
     expect(await nftDutchAuction.gotValidBid()).to.be.true;
-    await nftDutchAuction.connect(bidder1).bid(bidAmount1);
-    const balance1 = await erc20Token.balanceOf(bidder1.address);
+
+    // await erc20Token.connect(bidder1).approve(nftDutchAuction.address, bidAmount1);
+    // await nftDutchAuction.connect(bidder1).bid(bidAmount1, true, v, r, s, deadline);
+    const balance1 = await erc20Token.balanceOf(bidder2.address);
     const balanceOfseller = await erc20Token.balanceOf(seller.address);
     await erc20Token.connect(seller).approve(nftDutchAuction.address, bidAmount1);
-    await nftDutchAuction.connect(bidder1).claimRefund();
-    const balance2 = await erc20Token.balanceOf(bidder1.address);
+    await nftDutchAuction.connect(bidder2).claimRefund();
+    const balance2 = await erc20Token.balanceOf(bidder2.address);
     const difference = balance2.sub(balance1); // Calculate the difference
     expect(difference).to.equal(bidAmount1);
   });
@@ -139,8 +229,15 @@ describe("NFTDutchAuction_ERC20Bids2", function () {
     const currentPrice = await nftDutchAuction.getCurrentPrice();
     expect(currentPrice).to.equal(0);
     const bidAmount1 = 1000;
+    const { v, r, s } = await getPermitSignature(
+      seller,
+      erc20Token,
+      nftDutchAuction.address,
+      bidAmount1,
+      deadline
+    );
     await erc20Token.connect(bidder1).approve(nftDutchAuction.address, bidAmount1);
-    await expect(nftDutchAuction.connect(bidder1).bid(bidAmount1)).to.be.revertedWith("Auction has ended");
+    await expect(nftDutchAuction.connect(bidder1).bid(bidAmount1, true, v, r, s, deadline)).to.be.revertedWith("Auction has ended");
   });
 
   it("should mint the NFT and send it to the winner", async () => {

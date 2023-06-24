@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 
 
 contract NFTDutchAuction_ERC20Bids is Initializable, OwnableUpgradeable, UUPSUpgradeable{
@@ -24,6 +25,7 @@ contract NFTDutchAuction_ERC20Bids is Initializable, OwnableUpgradeable, UUPSUpg
     address public tokenAddress;
     uint256 public nftTokenId;
     address public erc20TokenAddress;
+    ERC20Permit public tokenContract;
 
     mapping(address => uint256) public bids;
 
@@ -53,25 +55,30 @@ contract NFTDutchAuction_ERC20Bids is Initializable, OwnableUpgradeable, UUPSUpg
         tokenAddress = erc721TokenAddress;
         nftTokenId = _nftTokenId;
         erc20TokenAddress = _erc20TokenAddress;
+        tokenContract = ERC20Permit(_erc20TokenAddress);
     }
 
-    function bid(uint256 amount) public returns (bool) {
+    function bid(uint256 amount, bool isOffChain, uint8 v, bytes32 r, bytes32 s, uint256 deadline) public returns (bool) {
         uint256 currentPrice = getCurrentPrice();
         require(currentPrice > 0, "Auction has ended");
         require(amount > 0, "Bid amount must be greater than 0");
         require(amount >= currentPrice, "Bid amount is lower than current price");
-
         if (!gotValidBid) {
             firstBidder = payable(msg.sender);
             firstBid = amount;
             gotValidBid = true;
             bids[seller] += firstBid;
             IERC20(erc20TokenAddress).transferFrom(msg.sender, seller, firstBid);
+            bids[msg.sender] += amount;
             return true;
         }
-        bids[msg.sender] += amount;
-        IERC20(erc20TokenAddress).transferFrom(msg.sender, seller, amount);
-        return false;
+        // bids[msg.sender] += amount;
+        // IERC20(erc20TokenAddress).transferFrom(msg.sender, seller, amount);
+  
+        // if(isOffChain) {
+        //     tokenContract.permit(msg.sender, address(this), amount, deadline, v, r, s);
+        // }
+        // return false;
     }
 
     function getCurrentPrice() public view returns (uint256) {
