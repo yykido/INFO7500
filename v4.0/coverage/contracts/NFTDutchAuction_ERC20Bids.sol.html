@@ -25,14 +25,14 @@
         <span class='fraction'>19/19</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">100% </span>
+        <span class="strong">81.25% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>12/12</span>
+        <span class='fraction'>13/16</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">100% </span>
+        <span class="strong">83.33% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>5/5</span>
+        <span class='fraction'>5/6</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
@@ -134,7 +134,16 @@
 89
 90
 91
-92</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -169,6 +178,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">30×</span>
+<span class="cline-any cline-yes">30×</span>
 <span class="cline-any cline-yes">30×</span>
 <span class="cline-any cline-yes">30×</span>
 <span class="cline-any cline-yes">30×</span>
@@ -213,27 +229,33 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// contracts/MyNFT.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-&nbsp;
-import "hardhat/console.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/presets/ERC721PresetMinterPauserAutoId.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 &nbsp;
-contract NFTDutchAuction_ERC20Bids is ERC721PresetMinterPauserAutoId {
+&nbsp;
+contract NFTDutchAuction_ERC20Bids is Initializable, OwnableUpgradeable, UUPSUpgradeable{
     address payable public seller;
     uint256 public reservePrice;
     uint256 public numBlocksAuctionOpen;
@@ -252,14 +274,17 @@ contract NFTDutchAuction_ERC20Bids is ERC721PresetMinterPauserAutoId {
 &nbsp;
     event AuctionEnded(address winner, uint256 amount);
 &nbsp;
-    constructor(
-    address _erc20TokenAddress, 
-    address erc721TokenAddress, 
-    uint256 _nftTokenId, 
-    uint256 _reservePrice, 
-    uint256 _numBlocksAuctionOpen, 
-    uint256 _offerPriceDecrement)
-    ERC721PresetMinterPauserAutoId("MyNFT", "MNFT", "https://northeastern.edu/nft") {
+    function initialize (
+        address _erc20TokenAddress, 
+        address erc721TokenAddress,
+         uint256 _nftTokenId,
+        uint256 _reservePrice, 
+        uint256 _numBlocksAuctionOpen, 
+        uint256 _offerPriceDecrement
+        ) 
+        public <span class="missing-if-branch" title="else path not taken" >E</span>initializer {
+        __Ownable_init();
+        __UUPSUpgradeable_init();
         seller = payable(msg.sender);
         reservePrice = _reservePrice;
         numBlocksAuctionOpen = _numBlocksAuctionOpen;
@@ -304,25 +329,27 @@ contract NFTDutchAuction_ERC20Bids is ERC721PresetMinterPauserAutoId {
     }
 &nbsp;
     function claimRefund() external {
+        // require(auctionEnded, "Auction has not ended");
         require(bids[msg.sender] &gt; 0, "No refund available");
 &nbsp;
         uint256 refundAmount = bids[msg.sender];
         bids[msg.sender] = 0;
-        console.log('refundAmount: ');
-        console.log(refundAmount);
         IERC20(erc20TokenAddress).transferFrom(seller, msg.sender, refundAmount);
-        // IERC20(erc20TokenAddress).transfer(msg.sender, refundAmount);
     }
+&nbsp;
     function getBalanceOf(address account) public view returns (uint256) {
         return bids[account];
     }
-}</pre></td></tr>
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _authorizeUpgrade(address newImplementation) internal onlyOwner override {}</span>
+}
+&nbsp;</pre></td></tr>
 </table></pre>
 <div class='push'></div><!-- for sticky footer -->
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Jun 23 2023 18:52:50 GMT+0800 (China Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Jun 24 2023 09:24:40 GMT+0800 (China Standard Time)
 </div>
 </div>
 <script src="../prettify.js"></script>
