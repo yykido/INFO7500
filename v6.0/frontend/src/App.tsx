@@ -17,8 +17,8 @@ export function App(): ReactElement {
       <ActivateDeactivate />
       <SectionDivider />
       <WalletStatus />
-      <SectionDivider />
-      <SignMessage />
+      {/* <SectionDivider /> */}
+      {/* <SignMessage /> */}
       <SectionDivider />
       <Greeter />
     </StyledAppDiv>
